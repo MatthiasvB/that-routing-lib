@@ -11,5 +11,8 @@
     "api"
   ],
   "author": "Matthias vom Bruch",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "typescript": "^4.7.4"
+  }
 }
