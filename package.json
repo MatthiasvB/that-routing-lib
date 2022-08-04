@@ -1,0 +1,15 @@
+{
+  "name": "easyrouting",
+  "version": "1.0.0",
+  "description": "A simple api for your routing needs",
+  "main": "easyrouting.ts",
+  "scripts": {
+    "test": "jest"
+  },
+  "keywords": [
+    "routing",
+    "api"
+  ],
+  "author": "Matthias vom Bruch",
+  "license": "MIT"
+}
