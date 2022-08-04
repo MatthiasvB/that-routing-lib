@@ -41,13 +41,13 @@ type Decr = [never, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17
  * Recursively extracts a Union of all keys out of a nested object structure up to a
  * maximum depth of approx 1000, the maximum that the compiler allows
  */
-export type ExtractKeys<T, N extends number = 999, Acc = never> = N extends 0 ? never : (T extends object ? ExtractKeys<T[keyof T], Decr[N], keyof T | Acc> : Acc)
+export type ExtractKeys<T, N extends number = 96, Acc = never> = N extends 0 ? never : (T extends object ? ExtractKeys<T[keyof T], Decr[N], keyof T | Acc> : Acc)
 
 /**
  * Extracts all keys that are parameters out of a nested object structure up to a
  * maximum depth of approx 32, the maximum that the compiler allows
  */
-type ExtractParameters<T> = Extract<ExtractKeys<T, 36>, Parameter>;
+type ExtractParameters<T> = Extract<ExtractKeys<T>, Parameter>;
 
 /**
  * Type of function that can be called to resolve a path
