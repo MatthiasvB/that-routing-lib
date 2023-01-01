@@ -26,10 +26,4 @@
   },
   "include": ["src/*.ts"],
   "exclude": ["src/*.(test|spec).ts"],
-  "angularCompilerOptions": {
-    "enableI18nLegacyMessageIdFormat": false,
-    "strictInjectionParameters": true,
-    "strictInputAccessModifiers": true,
-    "strictTemplates": true
-  }
 }
