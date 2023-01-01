@@ -1,21 +1,32 @@
-import {objectMap} from './shared/utils';
+import {objectMap} from './shared/utils.js';
 
 const isParent = 'isParent';
 const parameters = 'parameters';
 const forRouter = 'forRouter';
+const segmentName = 'segmentName';
+
+const blockedRouteSegments = [isParent, parameters, forRouter, segmentName, 'name', 'arguments', 'length', 'caller', 'prototype', 'bind'];
 
 type Empty = Record<string, never>;
 
 /**
  * Type for route segment with no sub-route. Empty for now, but could become more complex later on
  */
-type ProtoLeafSegment = Empty;
+type ProtoLeafSegment = {
+    [segmentName]?: string
+};
 
 
 /**
  * Type for route segment with sub-routes
  */
-type ProtoCoreSegment = { [isParent]?: true, subRoutes: { [key: string]: ProtoSegment } };
+type ProtoCoreSegment = {
+    [isParent]?: true,
+    subRoutes: {
+        [key: string]: ProtoSegment
+    },
+    [segmentName]: string
+};
 
 /**
  * Type for any route segment
@@ -28,7 +39,7 @@ type ProtoSegment = ProtoCoreSegment | ProtoLeafSegment;
 type ProtoRoutesWrapper = { [key: string]: ProtoSegment };
 
 /**
- * Type that a parameter key as to conform to be recognized as such
+ * Type that a parameter key as to conform to, to be recognized as such
  */
 type Parameter = `$${string}`;
 
@@ -39,7 +50,7 @@ type Decr = [never, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17
 
 /**
  * Recursively extracts a Union of all keys out of a nested object structure up to a
- * maximum depth of approx 1000, the maximum that the compiler allows
+ * maximum depth of approx 100, the maximum that the compiler allows
  */
 export type ExtractKeys<T, N extends number = 96, Acc = never> = N extends 0 ? never : (T extends object ? ExtractKeys<T[keyof T], Decr[N], keyof T | Acc> : Acc)
 
@@ -59,7 +70,7 @@ type RouteCallable = () => string;
  */
 type RouteFunctionObject<T extends ProtoSegment> =
     RouteCallable
-    & (T extends ProtoCoreSegment ? ClientRouterApi<T['subRoutes']> : Empty)
+    & (T extends ProtoCoreSegment ? ClientRoutingApi<T['subRoutes']> : Empty)
     & { [isParent]?: true };
 
 /**
@@ -73,11 +84,12 @@ type ForRouterFunctionObject<T extends ProtoSegment> =
  * Describes the API generated for a subroute. `T` is an object with child route names as keys, and their descriptions
  * as values
  */
-type ClientRouterApi<T extends ProtoRoutesWrapper> =
-    { [key in keyof T]: (key extends `$${string}` ? (parameter: string) => RouteFunctionObject<T[key]> : RouteFunctionObject<T[key]>) }
+type ClientRoutingApi<T extends ProtoRoutesWrapper> = {
+    [key in keyof T]: (key extends Parameter ? (parameter: string) => RouteFunctionObject<T[key]> : RouteFunctionObject<T[key]>)
+}
 
 // There is something which would I call a bug, here.
-// Typescript knows, that T extends ProtoRoutesWrapper, which is a Recursive type - yet of course not infinite in reality.
+// Typescript knows that T extends ProtoRoutesWrapper, which is a Recursive type - yet of course not infinite in reality.
 // It therefore gives a "TS2589: Type instantiation is excessively deep and possibly infinite." error
 // Had we not specified that T extends ProtoRoutesWrapper, it could very well still have been initialized with an infinite type
 // Yet, in that case, we would not have any issues here, now.
@@ -92,8 +104,8 @@ type ParameterString<T extends string> = T extends `$${infer U}` ? U : T;
 /**
  * Type of the API object
  */
-type RouterApi<T extends ProtoRoutesWrapper> =
-    ClientRouterApi<T> &
+type RoutingApi<T extends ProtoRoutesWrapper> =
+    ClientRoutingApi<T> &
     {
         [parameters]: ParametersObject<T>,
         [forRouter]: { [key in keyof T]: ForRouterFunctionObject<T[key]> },
@@ -103,9 +115,9 @@ type RouterApi<T extends ProtoRoutesWrapper> =
  * Creates the router API object
  * @param routes an object forming a tree of routes and subroutes
  */
-export function createApi<T extends ProtoRoutesWrapper>(routes: T): RouterApi<T> {
+export function createApi<T extends ProtoRoutesWrapper>(routes: T): RoutingApi<T> {
     return {
-        ...objectMap(routes, (route, key) => createClientApi(route, '/' + key)) as ClientRouterApi<T>,
+        ...objectMap(routes, (route, key) => createClientApi(route, '/' + key)) as ClientRoutingApi<T>,
         [forRouter]: {
             ...objectMap(routes, (route, key) => createForRouterApi(route, key, undefined)) as { [key in keyof T]: ForRouterFunctionObject<T[key]> }
         },
@@ -126,6 +138,8 @@ function extractParameters<T extends ProtoRoutesWrapper>(proto: T) {
  * @param obj the object from which to extract the parameters
  */
 function extractHelper(obj: ProtoRoutesWrapper | ProtoSegment): string[] {
+    console.log("Called extract helper with", obj);
+    if (typeof obj !== 'object') return [];
     return Object.entries(obj).map(([key, val]) => [key, ...extractHelper(val)]).reduce((acc, curr) => [...acc, ...curr], []);
 }
 
@@ -160,16 +174,18 @@ function createForRouterApi<T extends ProtoSegment>(proto: T, segment: string, p
  */
 function createClientApi<T extends ProtoSegment, S extends string>(
     proto: T,
-    segment: S,
+    key: string,
     parentPathFn?: () => string,
-): ClientRouterApi<T['subRoutes']> {
-    const api = (segment[0] !== '$' ? // proto is normal segment
+    // @ts-ignore
+): ClientRoutingApi<T['subRoutes']> {
+    const api = (key[0] !== '$' ? // proto is normal segment
         (function nest() {
+            const segment = segmentName in proto ? proto[segmentName] : key;
             const pathFn = () => (parentPathFn ? `${parentPathFn()}/` : '') + (segment);
             return Object.assign(
                 pathFn,
                 {
-                    ...objectMap('subRoutes' in proto ? proto.subRoutes : {}, (seg, key) => createClientApi(seg, key, pathFn)) as (T extends ProtoCoreSegment ? ClientRouterApi<T['subRoutes']> : Empty)
+                    ...objectMap('subRoutes' in proto ? proto.subRoutes : {}, (seg, key) => createClientApi(seg, key, pathFn)) as (T extends ProtoCoreSegment ? ClientRoutingApi<T['subRoutes']> : Empty)
                 }
             )
         })() : // proto is parameter segment
@@ -178,9 +194,10 @@ function createClientApi<T extends ProtoSegment, S extends string>(
             return Object.assign(
                 pathFn,
                 {
-                    ...objectMap('subRoutes' in proto ? proto.subRoutes : {}, (seg, key) => createClientApi(seg, key, pathFn)) as (T extends ProtoCoreSegment ? ClientRouterApi<T['subRoutes']> : Empty)
+                    ...objectMap('subRoutes' in proto ? proto.subRoutes : {}, (seg, key) => createClientApi(seg, key, pathFn)) as (T extends ProtoCoreSegment ? ClientRoutingApi<T['subRoutes']> : Empty)
                 }
             )
         });
-    return api as ClientRouterApi<T['subRoutes']>;
+    // @ts-ignore
+    return api as ClientRoutingApi<T['subRoutes']>;
 }
