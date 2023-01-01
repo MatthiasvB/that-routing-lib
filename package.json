@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "A simple api for your routing needs",
   "main": "easyrouting.ts",
+  "type": "module",
   "scripts": {
     "test": "jest"
   },
@@ -14,5 +15,8 @@
   "license": "MIT",
   "dependencies": {
     "typescript": "^4.7.4"
+  },
+  "devDependencies": {
+    "jest": "^29.3.1"
   }
 }

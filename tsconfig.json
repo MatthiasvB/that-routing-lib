@@ -11,6 +11,7 @@
     "strictNullChecks": true,
     "sourceMap": true,
     "declaration": false,
+    "esModuleInterop": true,
     "downlevelIteration": true,
     "experimentalDecorators": true,
     "moduleResolution": "node",
