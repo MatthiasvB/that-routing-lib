@@ -1,4 +1,4 @@
-import {ExtractKeys} from './easyrouting';
+import {ExtractKeys} from './easyrouting.js';
 
 const nestedObject = {
     ho: {
@@ -19,4 +19,4 @@ const nestedObject = {
 }
 
 
-type extractedKeys = ExtractKeys<typeof nestedObject>
+type extractedKeys = ExtractKeys<typeof nestedObject>;

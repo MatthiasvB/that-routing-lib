@@ -1,49 +1,19 @@
 import {createApi} from './easyrouting.js';
 
-const testRoutes = {
-    "nest": {
-        segmentName: "https://exciting-world.com/nest",
-        isParent: true,
-        subRoutes: {
-            "plaetze-feature": {
-                isParent: true,
+describe("The client routing API", () => {
+    it("Should generate URLs from plain, tree-like objects", () => {
+        const routes = {
+            root: {
                 subRoutes: {
-                    "$gebaeude_id": {
+                    home: {
                         subRoutes: {
-                            "$geschoss_id": {}
+                            recent: {}
                         }
                     }
                 }
-            },
-            "mitarbeiter-feature": {
-                subRoutes: {
-                    "add-mitarbeiter": {
-                        subRoutes: {
-                            "$team-id": {}
-                        }
-                    },
-                    "edit-mitarbeiter": {
-                        subRoutes: {
-                            "$mitarbeiter_id": {}
-                        }
-                    },
-                    "add-team": {},
-                    "edit-team": {
-                        subRoutes: {
-                            "$team_id": {}
-                        }
-                    }
-                }
-            },
-            "admin-feature": {},
+            }
         }
-    },
-    "test": {}
-} as const;
-
-// @ts-ignore
-const routes = createApi(testRoutes);
-
-console.log(routes);
-// @ts-ignore
-console.log(routes.nest['plaetze-feature']())
+        const api = createApi(routes)
+        expect(api.root.home.recent()).toEqual("root/home/recent");
+    })
+})

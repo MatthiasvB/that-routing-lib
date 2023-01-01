@@ -7,8 +7,6 @@ const segmentName = 'segmentName';
 
 const blockedRouteSegments = [isParent, parameters, forRouter, segmentName, 'name', 'arguments', 'length', 'caller', 'prototype', 'bind'];
 
-type Empty = Record<string, never>;
-
 /**
  * Type for route segment with no sub-route. Empty for now, but could become more complex later on
  */
@@ -25,7 +23,7 @@ type ProtoCoreSegment = {
     subRoutes: {
         [key: string]: ProtoSegment
     },
-    [segmentName]: string
+    [segmentName]?: string
 };
 
 /**
@@ -69,16 +67,19 @@ type RouteCallable = () => string;
  * Type of the function object that exists at each segment of the (client part of the) API object
  */
 type RouteFunctionObject<T extends ProtoSegment> =
-    RouteCallable
-    & (T extends ProtoCoreSegment ? ClientRoutingApi<T['subRoutes']> : Empty)
+    T extends ProtoCoreSegment
+        ? RouteCallable & ClientRoutingApi<T['subRoutes']>
+        : RouteCallable
     & { [isParent]?: true };
+
 
 /**
  * Type of the function object that exists at each segment of the forRouter part of the API object
  */
 type ForRouterFunctionObject<T extends ProtoSegment> =
-    RouteCallable &
-    (T extends ProtoCoreSegment ? { [key in keyof T['subRoutes']]: ForRouterFunctionObject<T['subRoutes'][key]> } : Empty)
+    T extends ProtoCoreSegment
+        ? RouteCallable & { [key in keyof T['subRoutes']]: ForRouterFunctionObject<T['subRoutes'][key]> }
+        : RouteCallable;
 
 /**
  * Describes the API generated for a subroute. `T` is an object with child route names as keys, and their descriptions
@@ -117,7 +118,7 @@ type RoutingApi<T extends ProtoRoutesWrapper> =
  */
 export function createApi<T extends ProtoRoutesWrapper>(routes: T): RoutingApi<T> {
     return {
-        ...objectMap(routes, (route, key) => createClientApi(route, '/' + key)) as ClientRoutingApi<T>,
+        ...objectMap(routes, (route, key) => createClientApi(route, key)) as ClientRoutingApi<T>,
         [forRouter]: {
             ...objectMap(routes, (route, key) => createForRouterApi(route, key, undefined)) as { [key in keyof T]: ForRouterFunctionObject<T[key]> }
         },
@@ -169,15 +170,14 @@ function createForRouterApi<T extends ProtoSegment>(proto: T, segment: string, p
 /**
  * Creates the client part of the router API
  * @param proto the current sub-route of the input element
- * @param segment the key under which the current element is found (= the path segment)
+ * @param key the key under which the current element is found (= the path segment)
  * @param parentPathFn a callback that gives the forRouter path of the parent segment
  */
-function createClientApi<T extends ProtoSegment, S extends string>(
+function createClientApi<T extends ProtoSegment>(
     proto: T,
     key: string,
     parentPathFn?: () => string,
-    // @ts-ignore
-): ClientRoutingApi<T['subRoutes']> {
+): T extends ProtoCoreSegment ? ClientRoutingApi<T['subRoutes']> : never {
     const api = (key[0] !== '$' ? // proto is normal segment
         (function nest() {
             const segment = segmentName in proto ? proto[segmentName] : key;
@@ -185,7 +185,7 @@ function createClientApi<T extends ProtoSegment, S extends string>(
             return Object.assign(
                 pathFn,
                 {
-                    ...objectMap('subRoutes' in proto ? proto.subRoutes : {}, (seg, key) => createClientApi(seg, key, pathFn)) as (T extends ProtoCoreSegment ? ClientRoutingApi<T['subRoutes']> : Empty)
+                    ...objectMap('subRoutes' in proto ? proto.subRoutes : {}, (seg, key) => createClientApi(seg, key, pathFn)) as (T extends ProtoCoreSegment ? ClientRoutingApi<T['subRoutes']> : never)
                 }
             )
         })() : // proto is parameter segment
@@ -194,10 +194,9 @@ function createClientApi<T extends ProtoSegment, S extends string>(
             return Object.assign(
                 pathFn,
                 {
-                    ...objectMap('subRoutes' in proto ? proto.subRoutes : {}, (seg, key) => createClientApi(seg, key, pathFn)) as (T extends ProtoCoreSegment ? ClientRoutingApi<T['subRoutes']> : Empty)
+                    ...objectMap('subRoutes' in proto ? proto.subRoutes : {}, (seg, key) => createClientApi(seg, key, pathFn)) as (T extends ProtoCoreSegment ? ClientRoutingApi<T['subRoutes']> : never)
                 }
             )
         });
-    // @ts-ignore
-    return api as ClientRoutingApi<T['subRoutes']>;
+    return api as T extends ProtoCoreSegment ? ClientRoutingApi<T['subRoutes']> : never;
 }
