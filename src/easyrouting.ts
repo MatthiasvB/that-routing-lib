@@ -5,7 +5,7 @@ const parameters = 'parameters';
 const forRouter = 'forRouter';
 const segmentName = 'segmentName';
 
-const blockedRouteSegments = [isParent, parameters, forRouter, segmentName, 'name', 'arguments', 'length', 'caller', 'prototype', 'bind'];
+const blockedRouteSegments = new Set([isParent, parameters, forRouter, segmentName, 'name', 'arguments', 'length', 'caller', 'prototype', 'bind']);
 
 /**
  * Type for route segment with no sub-route. Empty for now, but could become more complex later on
@@ -70,7 +70,7 @@ type RouteFunctionObject<T extends ProtoSegment> =
     T extends ProtoCoreSegment
         ? RouteCallable & ClientRoutingApi<T['subRoutes']>
         : RouteCallable
-    & { [isParent]?: true };
+        & { [isParent]?: true };
 
 
 /**
@@ -117,13 +117,29 @@ type RoutingApi<T extends ProtoRoutesWrapper> =
  * @param routes an object forming a tree of routes and subroutes
  */
 export function createApi<T extends ProtoRoutesWrapper>(routes: T): RoutingApi<T> {
+    const offendingKeys = getContainedReservedKeywords(routes);
+    console.log(offendingKeys)
+    if (offendingKeys.length) {
+        throw Error(`You have used the reserved keywords "${offendingKeys.join(" & ")}" in your route. This is not possible. ` +
+         "Consider using different keys and override the strings using segmentName");
+    }
+
     return {
         ...objectMap(routes, (route, key) => createClientApi(route, key)) as ClientRoutingApi<T>,
         [forRouter]: {
             ...objectMap(routes, (route, key) => createForRouterApi(route, key, undefined)) as { [key in keyof T]: ForRouterFunctionObject<T[key]> }
         },
         [parameters]: extractParameters(routes)
-    }
+    };
+}
+
+function getContainedReservedKeywords<T extends ProtoRoutesWrapper>(routes: T): string[] {
+    const offendingKeys = Object.entries(routes)
+        .flatMap(([key, val]) => [
+            ...(blockedRouteSegments.has(key) ? [key] : []),
+            ...('subRoutes' in val ? getContainedReservedKeywords(val.subRoutes) : [])
+        ]);
+    return offendingKeys;
 }
 
 /**
@@ -139,7 +155,6 @@ function extractParameters<T extends ProtoRoutesWrapper>(proto: T) {
  * @param obj the object from which to extract the parameters
  */
 function extractHelper(obj: ProtoRoutesWrapper | ProtoSegment): string[] {
-    console.log("Called extract helper with", obj);
     if (typeof obj !== 'object') return [];
     return Object.entries(obj).map(([key, val]) => [key, ...extractHelper(val)]).reduce((acc, curr) => [...acc, ...curr], []);
 }
