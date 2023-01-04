@@ -1,4 +1,4 @@
-import {createAngularRouterApi, createApi} from './easyrouting.js';
+import {buildRoutesForAngularRouter, buildRoutes} from './easyrouting.js';
 
 const routes = {
     root: {
@@ -33,48 +33,48 @@ const routes = {
 
 describe("The client routing API", () => {
     it("Should generate URLs from plain, tree-like objects", () => {
-        const api = createApi(routes);
+        const api = buildRoutes(routes);
         expect(api.root.home.recent()).toEqual("root/home/recent");
     });
 
     it("Processes route params", () => {
-        const api = createApi(routes);
+        const api = buildRoutes(routes);
         expect(api.root.articles.$articleId("7")()).toEqual("root/articles/7")
         expect(api.root.articles.$articleId("7").edit()).toEqual("root/articles/7/edit")
     });
 
     it("Allows overriding segment names for long or reserved strings", () => {
-        const api = createApi(routes);
+        const api = buildRoutes(routes);
         expect(api.root.override()).toEqual("root/actual");
     });
 
     it("Throws an error if a reserved name is used for a route segment", () => {
-        expect(() => createApi({ name: {} })).toThrow(/You have used the reserved keywords "name" in your route/);
+        expect(() => buildRoutes({ name: {} })).toThrow(/You have used the reserved keywords "name" in your route/);
     });
 });
 
 describe("The router routing API", () => {
     it("Should generate URLs from plain, tree-like objects", () => {
-        const routerApi = createAngularRouterApi(routes);
+        const routerApi = buildRoutesForAngularRouter(routes);
         expect(routerApi.root.home.recent()).toEqual("root/home/recent");
     });
 
     it("Prints route params with the colon syntax", () => {
-        const routerApi = createAngularRouterApi(routes);
+        const routerApi = buildRoutesForAngularRouter(routes);
         expect(routerApi.root.articles.$articleId()).toEqual("root/articles/:articleId");
     });
 
     it("Allows overriding segment names for long or reserved strings", () => {
-        const api = createAngularRouterApi(routes);
+        const api = buildRoutesForAngularRouter(routes);
         expect(api.root.override()).toEqual("root/actual");
     });
 
     it("Throws an error if a reserved name is used for a route segment", () => {
-        expect(() => createApi({ name: {} })).toThrow(/You have used the reserved keywords "name" in your route/);
+        expect(() => buildRoutes({ name: {} })).toThrow(/You have used the reserved keywords "name" in your route/);
     });
 
     it("Correctly treats parent and child routes", () => {
-        const api = createAngularRouterApi(routes);
+        const api = buildRoutesForAngularRouter(routes);
         expect(api.root.parentRoute()).toEqual("root/parentRoute");
         expect(api.root.parentRoute.childRoute()).toEqual("childRoute");
         expect(api.root.parentRoute.$parameterChild()).toEqual(":parameterChild");

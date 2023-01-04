@@ -149,12 +149,12 @@ type RoutingApiForRouter<T extends ProtoRoutesWrapper> =
  * Creates the router API object
  * @param routes an object forming a tree of routes and subroutes
  */
-export function createApi<T extends ProtoRoutesWrapper>(routes: T): RoutingApi<T> {
+export function buildRoutes<T extends ProtoRoutesWrapper>(routes: T): RoutingApi<T> {
     throwOnReservedKeywordsInKeys(routes);
     return objectMap(routes, (route, key) => createClientApi(route, key)) as ClientRoutingApi<T>;
 }
 
-export function createAngularRouterApi<T extends ProtoRoutesWrapper>(routes: T): RoutingApiForRouter<T> {
+export function buildRoutesForAngularRouter<T extends ProtoRoutesWrapper>(routes: T): RoutingApiForRouter<T> {
     throwOnReservedKeywordsInKeys(routes);
     return objectMap(routes, (route, key) => createForRouterApi(route, key, undefined)) as { [key in keyof T]: ForRouterFunctionObject<T[key]> };
 }
