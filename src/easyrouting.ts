@@ -1,16 +1,22 @@
 import {objectMap} from './shared/utils.js';
 
 const isParent = 'isParent';
-const parameters = 'parameters';
-const forRouter = 'forRouter';
 const segmentName = 'segmentName';
 
-const blockedRouteSegments = new Set([isParent, parameters, forRouter, segmentName, 'name', 'arguments', 'length', 'caller', 'prototype', 'bind']);
+const blockedRouteSegments = new Set(['name', 'arguments', 'length', 'caller', 'prototype', 'bind']);
+
+interface ApiConfiguration {
+    isParentPlaceholder: string;
+    parametersPlaceholder: string;
+    forRouterPlaceholder: string;
+    segmentNamePlaceholder: string;
+}
 
 /**
  * Type for route segment with no sub-route. Empty for now, but could become more complex later on
  */
 type ProtoLeafSegment = {
+    /** Used to override the string associated with this route. For example for long strings and reserved keywords such as `name` */
     [segmentName]?: string
 };
 
@@ -19,10 +25,34 @@ type ProtoLeafSegment = {
  * Type for route segment with sub-routes
  */
 type ProtoCoreSegment = {
+    /**
+     * Indicates that this route is a parent route in your router configuration (if applicable).
+     *
+     * Your router could be configured as
+     * ```typescript
+     * {
+     *     "parentRoute/childRoute": ChildComponent,
+     *     "parentRoute/otherChildRoute": OtherChildComponent
+     * }
+     * ```
+     * or
+     * ```typescript
+     * {
+     *     "parentRoute": { children: {
+     *         "childRoute": ChildComponent,
+     *         "otherChildRoute": OtherChildComponent
+     *     }}
+     * }
+     * ```
+     * The latter case would require the API to spit out different strings for the router configuration (again,
+     * if that is how you are using this package). For it to know that a route has children, specify `isParent: true`
+     */
     [isParent]?: true,
+    /** Specify all children of this route under this key. Keys you use in this object will become the strings used for the routes */
     subRoutes: {
         [key: string]: ProtoSegment
     },
+    /** Used to override the string associated with this route. For example for long strings and reserved keywords such as `name` */
     [segmentName]?: string
 };
 
@@ -106,31 +136,27 @@ type ParameterString<T extends string> = T extends `$${infer U}` ? U : T;
  * Type of the API object
  */
 type RoutingApi<T extends ProtoRoutesWrapper> =
-    ClientRoutingApi<T> &
-    {
-        [parameters]: ParametersObject<T>,
-        [forRouter]: { [key in keyof T]: ForRouterFunctionObject<T[key]> },
-    };
+    ClientRoutingApi<T>// &
+    // {
+    //     [parameters]: ParametersObject<T>,
+    //     [forRouter]: { [key in keyof T]: ForRouterFunctionObject<T[key]> },
+    // };
+
+type RoutingApiForRouter<T extends ProtoRoutesWrapper> =
+    { [key in keyof T]: ForRouterFunctionObject<T[key]> };
 
 /**
  * Creates the router API object
  * @param routes an object forming a tree of routes and subroutes
  */
 export function createApi<T extends ProtoRoutesWrapper>(routes: T): RoutingApi<T> {
-    const offendingKeys = getContainedReservedKeywords(routes);
-    console.log(offendingKeys)
-    if (offendingKeys.length) {
-        throw Error(`You have used the reserved keywords "${offendingKeys.join(" & ")}" in your route. This is not possible. ` +
-         "Consider using different keys and override the strings using segmentName");
-    }
+    throwOnReservedKeywordsInKeys(routes);
+    return objectMap(routes, (route, key) => createClientApi(route, key)) as ClientRoutingApi<T>;
+}
 
-    return {
-        ...objectMap(routes, (route, key) => createClientApi(route, key)) as ClientRoutingApi<T>,
-        [forRouter]: {
-            ...objectMap(routes, (route, key) => createForRouterApi(route, key, undefined)) as { [key in keyof T]: ForRouterFunctionObject<T[key]> }
-        },
-        [parameters]: extractParameters(routes)
-    };
+export function createAngularRouterApi<T extends ProtoRoutesWrapper>(routes: T): RoutingApiForRouter<T> {
+    throwOnReservedKeywordsInKeys(routes);
+    return objectMap(routes, (route, key) => createForRouterApi(route, key, undefined)) as { [key in keyof T]: ForRouterFunctionObject<T[key]> };
 }
 
 function getContainedReservedKeywords<T extends ProtoRoutesWrapper>(routes: T): string[] {
@@ -140,6 +166,14 @@ function getContainedReservedKeywords<T extends ProtoRoutesWrapper>(routes: T): 
             ...('subRoutes' in val ? getContainedReservedKeywords(val.subRoutes) : [])
         ]);
     return offendingKeys;
+}
+
+function throwOnReservedKeywordsInKeys<T extends ProtoRoutesWrapper>(routes: T): void {
+    const offendingKeys = getContainedReservedKeywords(routes);
+    if (offendingKeys.length) {
+        throw Error(`You have used the reserved keywords "${offendingKeys.join(" & ")}" in your route. This is not possible. ` +
+            "Consider using different keys and override the strings using segmentName");
+    }
 }
 
 /**
@@ -166,9 +200,24 @@ function extractHelper(obj: ProtoRoutesWrapper | ProtoSegment): string[] {
  * @param parentRoute optional callback that gives the forRouter string of the parent segment
  * @param isChild whether or not this is a child route
  */
-function createForRouterApi<T extends ProtoSegment>(proto: T, segment: string, parentRoute?: RouteCallable, isChild?: true | undefined) {
+function createForRouterApi<T extends ProtoSegment>(
+    proto: T,
+    key: string,
+    parentRoute?: RouteCallable,
+    isChild?: true | undefined
+) {
     return (function iife(): ForRouterFunctionObject<T> {
-        segment = segment[0] === '$' ? ':' + segment.substring(1) : segment;
+        // key = segmentName in proto ? proto[segmentName] : key;
+        // segment = segment[0] === '$' ? ':' + segment.substring(1) : segment;
+        const segment: string = (() => {
+            if (key[0] === '$') {
+                return ':' + key.substring(1);
+            } else if (segmentName in proto) {
+                return proto[segmentName];
+            } else {
+                return key;
+            }
+        })();
         const routerFn = () => (!isChild && parentRoute ? `${parentRoute()}/` : '') + segment;
         return Object.assign(
             routerFn,
