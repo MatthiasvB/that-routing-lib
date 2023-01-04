@@ -3,7 +3,7 @@ import {objectMap} from './shared/utils.js';
 const isParent = 'isParent';
 const segmentName = 'segmentName';
 
-const blockedRouteSegments = new Set(['name', 'arguments', 'length', 'caller', 'prototype', 'bind']);
+const reservedKeys = new Set(['name', 'arguments', 'length', 'caller', 'prototype', 'bind']);
 
 /**
  * Type for route segment with no sub-route. Empty for now, but could become more complex later on
@@ -17,7 +17,7 @@ type ProtoLeafSegment = {
 /**
  * Type for route segment with sub-routes
  */
-type ProtoCoreSegment = {
+type ProtoCoreSegment = ProtoLeafSegment & {
     /**
      * Indicates that this route is a parent route in your router configuration (if applicable).
      *
@@ -45,8 +45,6 @@ type ProtoCoreSegment = {
     subRoutes: {
         [key: string]: ProtoSegment
     },
-    /** Used to override the string associated with this route. For example for long strings and reserved keywords such as `name` */
-    [segmentName]?: string
 };
 
 /**
@@ -104,23 +102,18 @@ type ForRouterFunctionObject<T extends ProtoSegment> =
  */
 type ClientRoutingApi<T extends ProtoRoutesWrapper> = {
     [key in keyof T]: (key extends Parameter ? (parameter: string) => RouteFunctionObject<T[key]> : RouteFunctionObject<T[key]>)
-}
+};
 
 /**
  * Type of the API object
  */
-type RoutingApi<T extends ProtoRoutesWrapper> =
-    ClientRoutingApi<T>// &
-    // {
-    //     [parameters]: ParametersObject<T>,
-    //     [forRouter]: { [key in keyof T]: ForRouterFunctionObject<T[key]> },
-    // };
+type RoutingApi<T extends ProtoRoutesWrapper> = ClientRoutingApi<T>;
 
 type RoutingApiForRouter<T extends ProtoRoutesWrapper> =
     { [key in keyof T]: ForRouterFunctionObject<T[key]> };
 
 /**
- * Creates the router API object
+ * Creates the client API object
  * @param routes an object forming a tree of routes and subroutes
  */
 export function buildRoutes<T extends ProtoRoutesWrapper>(routes: T): RoutingApi<T> {
@@ -128,19 +121,33 @@ export function buildRoutes<T extends ProtoRoutesWrapper>(routes: T): RoutingApi
     return objectMap(routes, (route, key) => createClientApi(route, key)) as ClientRoutingApi<T>;
 }
 
+/**
+ * Creates the Angular Router API object
+ * @param routes an object forming a tree of routes and subroutes
+ */
 export function buildRoutesForAngularRouter<T extends ProtoRoutesWrapper>(routes: T): RoutingApiForRouter<T> {
     throwOnReservedKeywordsInKeys(routes);
     return objectMap(routes, (route, key) => createForRouterApi(route, key, undefined)) as { [key in keyof T]: ForRouterFunctionObject<T[key]> };
 }
 
+/**
+ * Extracts all reserved keywords that are found within the `routes` object
+ * @param routes the object to be checked for reserved keywords
+ * @returns an array containing all found reserved keywords
+ */
 function getContainedReservedKeywords<T extends ProtoRoutesWrapper>(routes: T): string[] {
     return Object.entries(routes)
         .flatMap(([key, val]) => [
-            ...(blockedRouteSegments.has(key) ? [key] : []),
+            ...(reservedKeys.has(key) ? [key] : []),
             ...('subRoutes' in val ? getContainedReservedKeywords(val.subRoutes) : [])
         ]);
 }
 
+/**
+ * Checks if any reserved keywords are found within `routes` and throws an error if so
+ * @param routes the object to be checked for reserved keywords
+ * @throws an error describing which reserved keywords have been found
+ */
 function throwOnReservedKeywordsInKeys<T extends ProtoRoutesWrapper>(routes: T): void {
     const offendingKeys = getContainedReservedKeywords(routes);
     if (offendingKeys.length) {
@@ -163,8 +170,6 @@ function createForRouterApi<T extends ProtoSegment>(
     isChild?: true | undefined
 ) {
     return (function iife(): ForRouterFunctionObject<T> {
-        // key = segmentName in proto ? proto[segmentName] : key;
-        // segment = segment[0] === '$' ? ':' + segment.substring(1) : segment;
         const segment: string = (() => {
             if (key[0] === '$') {
                 return ':' + key.substring(1);
