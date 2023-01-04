@@ -13,6 +13,7 @@
     "declaration": false,
     "esModuleInterop": true,
     "downlevelIteration": true,
+    "exactOptionalPropertyTypes": true,
     "experimentalDecorators": true,
     "moduleResolution": "node",
     "importHelpers": true,
@@ -20,7 +21,7 @@
     "module": "es2020",
     "lib": [
       "es2020",
-      "dom",
+      "dom"
     ],
     "types": ["jest"]
   },
