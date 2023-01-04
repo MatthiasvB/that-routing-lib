@@ -23,7 +23,8 @@ const routes = {
             parentRoute: {
                 isParent: true as const,
                 subRoutes: {
-                    childRoute: {}
+                    childRoute: {},
+                    $parameterChild: {}
                 }
             }
         }
@@ -76,5 +77,6 @@ describe("The router routing API", () => {
         const api = createAngularRouterApi(routes);
         expect(api.root.parentRoute()).toEqual("root/parentRoute");
         expect(api.root.parentRoute.childRoute()).toEqual("childRoute");
-    })
+        expect(api.root.parentRoute.$parameterChild()).toEqual(":parameterChild");
+    });
 });
