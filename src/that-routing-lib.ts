@@ -5,13 +5,6 @@ const segmentName = 'segmentName';
 
 const blockedRouteSegments = new Set(['name', 'arguments', 'length', 'caller', 'prototype', 'bind']);
 
-interface ApiConfiguration {
-    isParentPlaceholder: string;
-    parametersPlaceholder: string;
-    forRouterPlaceholder: string;
-    segmentNamePlaceholder: string;
-}
-
 /**
  * Type for route segment with no sub-route. Empty for now, but could become more complex later on
  */
@@ -83,12 +76,6 @@ type Decr = [never, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17
 export type ExtractKeys<T, N extends number = 96, Acc = never> = N extends 0 ? never : (T extends object ? ExtractKeys<T[keyof T], Decr[N], keyof T | Acc> : Acc)
 
 /**
- * Extracts all keys that are parameters out of a nested object structure up to a
- * maximum depth of approx 32, the maximum that the compiler allows
- */
-type ExtractParameters<T> = Extract<ExtractKeys<T>, Parameter>;
-
-/**
  * Type of function that can be called to resolve a path
  */
 type RouteCallable = () => string;
@@ -119,19 +106,6 @@ type ClientRoutingApi<T extends ProtoRoutesWrapper> = {
     [key in keyof T]: (key extends Parameter ? (parameter: string) => RouteFunctionObject<T[key]> : RouteFunctionObject<T[key]>)
 }
 
-// There is something which would I call a bug, here.
-// Typescript knows that T extends ProtoRoutesWrapper, which is a Recursive type - yet of course not infinite in reality.
-// It therefore gives a "TS2589: Type instantiation is excessively deep and possibly infinite." error
-// Had we not specified that T extends ProtoRoutesWrapper, it could very well still have been initialized with an infinite type
-// Yet, in that case, we would not have any issues here, now.
-// However, we need to enforce ProtoRoutesWrapper, so that users don't pass Bullsh1t!
-/**
- * Creates a Type that is an object that has all parameter keys found in `T` both as key and value.
- * Keys are extracted up to a maximum depth of approx 32, the maximum that the compiler allows
- */
-type ParametersObject<T extends ProtoRoutesWrapper> = { [key in ExtractParameters<T>]: ParameterString<key> };
-type ParameterString<T extends string> = T extends `$${infer U}` ? U : T;
-
 /**
  * Type of the API object
  */
@@ -160,12 +134,11 @@ export function buildRoutesForAngularRouter<T extends ProtoRoutesWrapper>(routes
 }
 
 function getContainedReservedKeywords<T extends ProtoRoutesWrapper>(routes: T): string[] {
-    const offendingKeys = Object.entries(routes)
+    return Object.entries(routes)
         .flatMap(([key, val]) => [
             ...(blockedRouteSegments.has(key) ? [key] : []),
             ...('subRoutes' in val ? getContainedReservedKeywords(val.subRoutes) : [])
         ]);
-    return offendingKeys;
 }
 
 function throwOnReservedKeywordsInKeys<T extends ProtoRoutesWrapper>(routes: T): void {
@@ -177,26 +150,9 @@ function throwOnReservedKeywordsInKeys<T extends ProtoRoutesWrapper>(routes: T):
 }
 
 /**
- * Generates a parameter object
- * @param proto the object from which to extract the parameters
- */
-function extractParameters<T extends ProtoRoutesWrapper>(proto: T) {
-    return Object.fromEntries(extractHelper(proto).filter(key => key[0] === '$').map(key => [key, key.substring(1)])) as ParametersObject<T>;
-}
-
-/**
- * Recursively extracts parameters from an object into an array of strings
- * @param obj the object from which to extract the parameters
- */
-function extractHelper(obj: ProtoRoutesWrapper | ProtoSegment): string[] {
-    if (typeof obj !== 'object') return [];
-    return Object.entries(obj).map(([key, val]) => [key, ...extractHelper(val)]).reduce((acc, curr) => [...acc, ...curr], []);
-}
-
-/**
  * This function recursively creates the forRouter part of the API object
  * @param proto the current element that is converted to a function object
- * @param segment the key under which the current element was found (= the route segment to the current object)
+ * @param key the key under which the current element was found (= the route segment to the current object)
  * @param parentRoute optional callback that gives the forRouter string of the parent segment
  * @param isChild whether or not this is a child route
  */

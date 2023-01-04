@@ -1,4 +1,4 @@
-import {ExtractKeys} from './easyrouting.js';
+import {ExtractKeys} from './that-routing-lib.js';
 
 const nestedObject = {
     ho: {

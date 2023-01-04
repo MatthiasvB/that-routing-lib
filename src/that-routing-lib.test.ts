@@ -1,4 +1,4 @@
-import {buildRoutesForAngularRouter, buildRoutes} from './easyrouting.js';
+import {buildRoutesForAngularRouter, buildRoutes} from './that-routing-lib.js';
 
 const routes = {
     root: {

@@ -1,4 +1,4 @@
-# easyrouting
+# that-routing-lib
 *Stop worrying about those URLs*
 ## Intro
 This library provides an easy-to-use API to build URLs in your JS/TS-project. Creating a URL-string that links to a given location becomes a simple as
@@ -9,7 +9,7 @@ const editArticle4 = routesApi.articles.$articleId("4").edit();
 ```
 with full Typescript support.
 
-`easyrouting` has been designed with the Angular router in mind, but the client side functionality can be used to construct URLs for any setting.
+`that-routing-lib` has been designed with the Angular router in mind, but the client side functionality can be used to construct URLs for any setting.
 
 ## Why use this lib?
 Whenever we need a URL in our projects, we can typically choose to either
@@ -24,13 +24,13 @@ We need a scheme that allows us to
 - easily refactor code
 - access URLs easily with minimal risk of mistakes
 
-`easyrouting` helps you in fulfilling all these requirements, by allowing you to specify your routes with minimal effort in a tree-like structure and providing functions to turn this data into function objects with a super nifty developer experience.
+`that-routing-lib` helps you in fulfilling all these requirements, by allowing you to specify your routes with minimal effort in a tree-like structure and providing functions to turn this data into function objects with a super nifty developer experience.
 
 ## How to define your URL tree
 In the simplest case, your URLs are defined as follows
 
 ```typescript
-import {buildRoutes} from './easyrouting';
+import {buildRoutes} from './that-routing-lib';
 
 const routesDefinition = {
     home: {},
@@ -80,7 +80,7 @@ Reserved keywords are
 Since it is quite likely that strings like `name` will be part of a URL, you can overwrite the string associated with a given URL segment with the `segmentName` property:
 
 ```typescript
-import {buildRoutes} from './easyrouting';
+import {buildRoutes} from './that-routing-lib';
 
 const routesDefiniton = {
     user: {
@@ -104,7 +104,7 @@ const nameUrl = routesApi.user.$userId("78357").uname();
 this can also be useful to prepend slashes, entire domain names, or insert chars that would require string notation for keys when used directly:
 
 ```typescript
-import {buildRoutes} from './easyrouting';
+import {buildRoutes} from './that-routing-lib';
 
 const routesDefiniton = {
     sameOrigin: {
@@ -155,7 +155,7 @@ Two requirements have to be fulfilled for this to work:
 The router API works exactly the same as the client API, except that now you don't have to pass a string to parameter segments. To signal that a given route is a parent route, you add the key `isParent: true` to the object:
 
 ```typescript
-import {buildRoutesForAngularRouter} from './easyrouting';
+import {buildRoutesForAngularRouter} from './that-routing-lib';
 
 const routesDefinition = {
     topics: {
