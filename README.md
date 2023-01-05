@@ -1,7 +1,7 @@
 # that-routing-lib
 *Stop worrying about those URLs*
 ## Intro
-This library provides an easy-to-use API to build URLs in your JS/TS-project. Creating a URL-string that links to a given location becomes a simple as
+This library provides an easy-to-use API to build URLs in your JS/TS-project. Creating a URL-string that links to a given location becomes as simple as
 
 ```typescript
 // "/articles/4/edit"
@@ -16,7 +16,7 @@ Whenever we need a URL in our projects, we can typically choose to either
 - Write the URL out as a string 
 - Use predefined constants for given URLs
 
-The first method is prone to typos and difficult to adjust should things change eventually. The latter method is safe with regard to these problems, but poses the question which parts of a URL to safe as constants. The entire URL? Or each segment separately? Saving the entire URL, as in `/topics/cooking/soup` is easy to use, but requires a lot of variables for each possible URL, such as `/topics/cooking/fish` and `/topics/travel/spain`. When saving each segment, we avoid this combinatory hell, but have no way of knowing whether `TOPICS + '/' + FISH + '/' + SPAIN` is a valid URL or not. And what about route parameters as in `/topics/travel/articles/4`?
+The first method is prone to typos and difficult to adjust should things change eventually. The latter method is safe with regard to these problems, but poses the question of which parts of a URL to save as constants. The entire URL? Or each segment separately? Saving the entire URL, as in `/topics/cooking/soup` is easy to use, but requires a lot of variables for each possible URL, such as `/topics/cooking/fish` and `/topics/travel/spain`. When saving each segment, we avoid having one constant per leaf in your routes tree, but have no way of knowing whether `TOPICS + '/' + FISH + '/' + SPAIN` is a valid URL or not. And what about route parameters as in `/topics/travel/articles/4`?
 
 We need a scheme that allows us to
 - centrally define all routes to avoid typos
@@ -70,7 +70,7 @@ const routeToTravel = routesApi.topics.travel()
 const routeToTravelArticle = routesApi.topics.travel.articles.$articleId("5")()
 ```
 
-Unfortunately, with any segment of the API being a function, there are a few reseved keywords which can not be used, because they are either readonly (such as a function's `name`) or should not be overwritten (like `bind`). When you try to create the API object with input that contains these keys, an error will be thrown.
+Unfortunately, with any segment of the API being a function, there are a few reserved keywords which can not be used, because they are either readonly (such as a function's `name`) or should not be overwritten (like `bind`). When you try to create the API object with input that contains these keys, an error will be thrown.
 
 Reserved keywords are
 ```typescript
@@ -98,7 +98,7 @@ const routesDefiniton = {
 
 const routesApi = buildRoutes(routesDefiniton);
 
-// "user/78537/name"
+// "user/78357/name"
 const nameUrl = routesApi.user.$userId("78357").uname();
 ```
 this can also be useful to prepend slashes, entire domain names, or insert chars that would require string notation for keys when used directly:

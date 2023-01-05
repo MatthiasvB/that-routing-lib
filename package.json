@@ -1,6 +1,6 @@
 {
   "name": "that-routing-lib",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "A simple api for your routing needs",
   "main": "that-routing-lib.ts",
   "type": "module",
@@ -13,10 +13,14 @@
   ],
   "author": "Matthias vom Bruch",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/MatthiasvB/easyrouting"
+  },
   "dependencies": {
-    "typescript": "^4.7.4"
   },
   "devDependencies": {
+    "typescript": "^4.7.4",
     "@babel/core": "^7.20.7",
     "@babel/preset-env": "^7.20.2",
     "@babel/preset-typescript": "^7.18.6",
