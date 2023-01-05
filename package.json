@@ -1,6 +1,6 @@
 {
   "name": "that-routing-lib",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "A simple api for your routing needs",
   "main": "that-routing-lib.ts",
   "type": "module",
@@ -15,7 +15,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/MatthiasvB/easyrouting"
+    "url": "https://github.com/MatthiasvB/that-routing-lib"
   },
   "dependencies": {
   },
