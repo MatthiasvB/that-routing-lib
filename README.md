@@ -16,7 +16,7 @@ Whenever we need a URL in our projects, we can typically choose to either
 - Write the URL out as a string 
 - Use predefined constants for given URLs
 
-The first method is prone to typos and difficult to adjust should things change eventually. The latter method is safe with regard to these problems, but poses the question of which parts of a URL to save as constants. The entire URL? Or each segment separately? Saving the entire URL, as in `/topics/cooking/soup` is easy to use, but requires a lot of variables for each possible URL, such as `/topics/cooking/fish` and `/topics/travel/spain`. When saving each segment, we avoid having one constant per leaf in your routes tree, but have no way of knowing whether `TOPICS + '/' + FISH + '/' + SPAIN` is a valid URL or not. And what about route parameters as in `/topics/travel/articles/4`?
+The first method is prone to typos and difficult to adjust should things change eventually. The latter method is safe with regard to these problems, but poses the question of which parts of a URL to save as constants. The entire URL? Or each segment separately? Saving the entire URL, as in `/topics/cooking/soup` is easy to use, but requires a lot of variables for each possible URL, such as `/topics/cooking/fish` and `/topics/travel/spain`. When saving each segment, we avoid having one constant per leaf in our routes tree, but have no way of knowing whether `TOPICS + '/' + FISH + '/' + SPAIN` is a valid URL or not. And what about route parameters as in `/topics/travel/articles/4`?
 
 We need a scheme that allows us to
 - centrally define all routes to avoid typos
