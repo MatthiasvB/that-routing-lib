@@ -40,7 +40,7 @@ type ProtoCoreSegment = ProtoLeafSegment & {
      * The latter case would require the API to spit out different strings for the router configuration (again,
      * if that is how you are using this package). For it to know that a route has children, specify `isParent: true`
      */
-    [isParent]?: true,
+    [isParent]?: boolean,
     /** Specify all children of this route under this key. Keys you use in this object will become the strings used for the routes */
     subRoutes: {
         [key: string]: ProtoSegment
@@ -85,7 +85,7 @@ type RouteFunctionObject<T extends ProtoSegment> =
     T extends ProtoCoreSegment
         ? RouteCallable & ClientRoutingApi<T['subRoutes']>
         : RouteCallable
-        & { [isParent]?: true };
+        & { [isParent]?: boolean };
 
 
 /**
@@ -167,7 +167,7 @@ function createForRouterApi<T extends ProtoSegment>(
     proto: T,
     key: string,
     parentRoute?: RouteCallable,
-    isChild?: true | undefined
+    isChild?: boolean | undefined
 ) {
     return (function iife(): ForRouterFunctionObject<T> {
         const segment: string = (() => {

@@ -161,14 +161,14 @@ const routesDefinition = {
     topics: {
         subRoutes: {
             travel: {
-                isParent: true as const,
+                isParent: true,
                 subRoutes: {
                     articles: {},
                     spain: {}
                 }
             },
             otherParent: {
-                isParent: true as const,
+                isParent: true,
                 subRoutes: {
                     $parameter: {}
                 }

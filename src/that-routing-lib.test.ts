@@ -21,10 +21,16 @@ const routes = {
                 segmentName: "actual",
             },
             parentRoute: {
-                isParent: true as const,
+                isParent: true,
                 subRoutes: {
                     childRoute: {},
                     $parameterChild: {}
+                }
+            },
+            notAParentRoute: {
+                isParent: false,
+                subRoutes: {
+                    notAChild: {}
                 }
             }
         }
@@ -78,6 +84,11 @@ describe("The router routing API", () => {
         expect(api.root.parentRoute()).toEqual("root/parentRoute");
         expect(api.root.parentRoute.childRoute()).toEqual("childRoute");
         expect(api.root.parentRoute.$parameterChild()).toEqual(":parameterChild");
+    });
+
+    it("Ignores `isParent` set to false", () => {
+        const api = buildRoutesForAngularRouter(routes);
+        expect(api.root.notAParentRoute.notAChild()).toEqual("root/notAParentRoute/notAChild");
     });
 });
 
