@@ -1,22 +1,35 @@
-import {ExtractKeys} from './that-routing-lib.js';
+import {ParametersObject} from './that-routing-lib.js';
 
 const nestedObject = {
-    ho: {
-        hi: {
-            ha: {
-                hu: 'hu'
-            }
-        },
-        di: {
-            do: {
-                du: 'du'
+    root: {
+        subRoutes: {
+            home: {
+                subRoutes: {
+                    recent: {}
+                }
+            },
+            articles : {
+                subRoutes: {
+                    $articleId: {
+                        subRoutes: {
+                            edit: {}
+                        }
+                    }
+                }
+            },
+            override: {
+                segmentName: "actual",
+            },
+            parentRoute: {
+                isParent: true as const,
+                subRoutes: {
+                    childRoute: {},
+                    $parameterChild: {}
+                }
             }
         }
-    },
-    bo: {
-        bu: 'bu'
     }
-}
+};
 
+type extractedObject = ParametersObject<typeof nestedObject>;
 
-type extractedKeys = ExtractKeys<typeof nestedObject>;

@@ -1,4 +1,4 @@
-import {buildRoutesForAngularRouter, buildRoutes} from './that-routing-lib.js';
+import {buildRoutesForAngularRouter, buildRoutes, extractParameters} from './that-routing-lib.js';
 
 const routes = {
     root: {
@@ -79,4 +79,11 @@ describe("The router routing API", () => {
         expect(api.root.parentRoute.childRoute()).toEqual("childRoute");
         expect(api.root.parentRoute.$parameterChild()).toEqual(":parameterChild");
     });
+});
+
+describe("The parameter extraction routine", () => {
+   it("Extracts parameters from the route definitons", () => {
+       const params = extractParameters(routes);
+       expect(params.$articleId).toEqual("articleId");
+   });
 });

@@ -71,7 +71,7 @@ type Decr = [never, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17
  * Recursively extracts a Union of all keys out of a nested object structure up to a
  * maximum depth of approx 100, the maximum that the compiler allows
  */
-export type ExtractKeys<T, N extends number = 96, Acc = never> = N extends 0 ? never : (T extends object ? ExtractKeys<T[keyof T], Decr[N], keyof T | Acc> : Acc)
+type ExtractKeys<T, N extends number = 96, Acc = never> = N extends 0 ? never : (T extends object ? (keyof T extends never ? Acc : ExtractKeys<T[keyof T], Decr[N], keyof T | Acc>) : Acc)
 
 /**
  * Type of function that can be called to resolve a path
@@ -224,4 +224,40 @@ function createClientApi<T extends ProtoSegment>(
             )
         });
     return api as T extends ProtoCoreSegment ? ClientRoutingApi<T['subRoutes']> : never;
+}
+
+/**
+ * Extracts all keys that are parameters out of a nested object structure up to a
+ * maximum depth of approx 32, the maximum that the compiler allows
+ */
+type ExtractParameters<T> = Extract<ExtractKeys<T>, Parameter>;
+
+// There is something which would I call a bug, here.
+// Typescript knows that T extends ProtoRoutesWrapper, which is a Recursive type - yet of course not infinite in reality.
+// It therefore gives a "TS2589: Type instantiation is excessively deep and possibly infinite." error
+// Had we not specified that T extends ProtoRoutesWrapper, it could very well still have been initialized with an infinite type
+// Yet, in that case, we would not have any issues here, now.
+// However, we need to enforce ProtoRoutesWrapper, so that users don't pass Bullsh1t!
+/**
+ * Creates a Type that is an object that has all parameter keys found in `T` both as key and value.
+ * Keys are extracted up to a maximum depth of approx 32, the maximum that the compiler allows
+ */
+export type ParametersObject<T extends ProtoRoutesWrapper> = { [key in ExtractParameters<T>]: ParameterString<key> };
+type ParameterString<T extends string> = T extends `$${infer U}` ? U : T;
+
+/**
+ * Generates a parameter object
+ * @param proto the object from which to extract the parameters
+ */
+export function extractParameters<T extends ProtoRoutesWrapper>(proto: T): ParametersObject<T> {
+    return Object.fromEntries(extractHelper(proto).filter(key => key[0] === '$').map(key => [key, key.substring(1)])) as ParametersObject<T>;
+}
+
+/**
+ * Recursively extracts parameters from an object into an array of strings
+ * @param obj the object from which to extract the parameters
+ */
+function extractHelper(obj: ProtoRoutesWrapper | ProtoSegment): string[] {
+    if (typeof obj !== 'object') return [];
+    return Object.entries(obj).map(([key, val]) => [key, ...extractHelper(val)]).reduce((acc, curr) => [...acc, ...curr], []);
 }
