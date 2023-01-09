@@ -1,6 +1,6 @@
 {
   "name": "that-routing-lib",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "A simple api for your routing needs",
   "main": "that-routing-lib.ts",
   "type": "module",
