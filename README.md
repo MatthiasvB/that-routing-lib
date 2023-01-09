@@ -64,10 +64,10 @@ The strings of the keys which you use are directly turned into the strings of yo
 Under the hood, the library constructs a nested function object. That's why, at any point along your route, you can either call the function to return the string, or continue to build a URL that is nested more deeply:
 ```typescript
 // "topics/travel"
-const routeToTravel = routesApi.topics.travel()
+const routeToTravel = routesApi.topics.travel();
 
 // "topics/travel/acticles/5
-const routeToTravelArticle = routesApi.topics.travel.articles.$articleId("5")()
+const routeToTravelArticle = routesApi.topics.travel.articles.$articleId("5")();
 ```
 
 Unfortunately, with any segment of the API being a function, there are a few reserved keywords which can not be used, because they are either readonly (such as a function's `name`) or should not be overwritten (like `bind`). When you try to create the API object with input that contains these keys, an error will be thrown.
@@ -136,12 +136,12 @@ const routesDefiniton = {
             }
         }
     }
-}
+};
 
 const routesApi = buildRoutes(routesDefiniton);
 
 // "https://my-analytics.com/page-navigation/etkceaua/aetaeo"
-const navigationAnalyticsUrl = routesApi.analytics.pageNavigation.$fromPageId("etkceaua").$toPageId("aetaeo")()
+const navigationAnalyticsUrl = routesApi.analytics.pageNavigation.$fromPageId("etkceaua").$toPageId("aetaeo")();
 ```
 **Note:** You can not use `segmentName` to overwrite `$parameter`s, because no reserved keyword starts with a `$`, and there is no other reason why you'd want to do this for parameters.
 
@@ -186,6 +186,26 @@ const urlForChildForRouter = routesApi.topics.travel.articles();
 // ":parameter"
 const urlForParameterChildForRouter = routesApi.topics.otherParent.$parameter();
 ```
+
+### Extract parameters to get data from router
+We need the name of the parameter to obtain data from the activated route that has been inserted in the URL
+```typescript
+const articleId = this.activatedRoute.snapshot.params['articleId'];
+```
+This is another case which is prone to errors. How do we know which parameter names exist? We'd have to check in the route definitions, and we'd have no way to safely refactor this code.
+
+But we can do this:
+
+```typescript
+import {extractParameters} from './that-routing-lib';
+
+// In central location:
+const parameters = extractParameters(routesDefinition);
+
+// In component
+const articleId = this.activatedRoute.snapshot.params[parameters.$articleId];
+```
+This isn't perfect. We have no way of knowing whether `$articleId` actually is part of the route behind which our component sits (this is always the case when using the router). In fact, we don't know at all which routes contain this parameter. But we do know that *some* route contains this parameter, which gives some confidence that what we do is right. And there is no way we produce a typo this way.
 
 ## Gotchas
 - Due to Typescript technicalities, the maximum depth of your URLs is 30ish segments. That's because a recursive type has to be used, and the stack-size that TS allows is very limited. It's possible that this limit will be increased eventually.
