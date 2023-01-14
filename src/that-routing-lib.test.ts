@@ -34,6 +34,9 @@ const routes = {
                 }
             }
         }
+    },
+    withSlash: {
+        segmentName: '/withSlash'
     }
 };
 
@@ -89,6 +92,11 @@ describe("The router routing API", () => {
     it("Ignores `isParent` set to false", () => {
         const api = buildRoutesForAngularRouter(routes);
         expect(api.root.notAParentRoute.notAChild()).toEqual("root/notAParentRoute/notAChild");
+    });
+
+    it("Removes leading slashes in URLs", () => {
+        const api = buildRoutesForAngularRouter(routes);
+        expect(api.withSlash()).toEqual("withSlash");
     });
 });
 

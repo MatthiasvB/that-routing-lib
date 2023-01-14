@@ -174,7 +174,8 @@ function createForRouterApi<T extends ProtoSegment>(
             if (key[0] === '$') {
                 return ':' + key.substring(1);
             } else if (segmentName in proto) {
-                return proto[segmentName];
+                const overwrittenSegment = proto[segmentName];
+                return overwrittenSegment[0] === '/' ? overwrittenSegment.substring(1) : overwrittenSegment;
             } else {
                 return key;
             }
