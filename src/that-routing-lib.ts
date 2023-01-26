@@ -55,7 +55,7 @@ type ProtoSegment = ProtoCoreSegment | ProtoLeafSegment;
 /**
  * Type for raw object that is input for API generation
  */
-type ProtoRoutesWrapper = { [key: string]: ProtoSegment };
+export type ProtoRoutesWrapper = { [key: string]: ProtoSegment };
 
 /**
  * Type that a parameter key as to conform to, to be recognized as such

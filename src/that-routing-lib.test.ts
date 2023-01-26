@@ -2,6 +2,7 @@ import {buildRoutesForAngularRouter, buildRoutes, extractParameters} from './tha
 
 const routes = {
     root: {
+        segmentName: "/root",
         subRoutes: {
             home: {
                 subRoutes: {
@@ -41,20 +42,20 @@ const routes = {
 };
 
 describe("The client routing API", () => {
-    it("Should generate URLs from plain, tree-like objects", () => {
+    it("Generates URLs from plain, tree-like objects", () => {
         const api = buildRoutes(routes);
-        expect(api.root.home.recent()).toEqual("root/home/recent");
+        expect(api.root.home.recent()).toEqual("/root/home/recent");
     });
 
     it("Processes route params", () => {
         const api = buildRoutes(routes);
-        expect(api.root.articles.$articleId("7")()).toEqual("root/articles/7")
-        expect(api.root.articles.$articleId("7").edit()).toEqual("root/articles/7/edit")
+        expect(api.root.articles.$articleId("7")()).toEqual("/root/articles/7");
+        expect(api.root.articles.$articleId("7").edit()).toEqual("/root/articles/7/edit");
     });
 
     it("Allows overriding segment names for long or reserved strings", () => {
         const api = buildRoutes(routes);
-        expect(api.root.override()).toEqual("root/actual");
+        expect(api.root.override()).toEqual("/root/actual");
     });
 
     it("Throws an error if a reserved name is used for a route segment", () => {
