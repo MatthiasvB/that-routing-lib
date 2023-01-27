@@ -1,6 +1,6 @@
 {
   "name": "that-routing-lib",
-  "version": "1.1.2",
+  "version": "1.1.3",
   "description": "A simple api for your routing needs",
   "type": "module",
   "scripts": {
