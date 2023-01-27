@@ -101,7 +101,7 @@ type ForRouterFunctionObject<T extends ProtoSegment> =
  * as values
  */
 type ClientRoutingApi<T extends ProtoRoutesWrapper> = {
-    [key in keyof T]: (key extends Parameter ? (parameter: string) => RouteFunctionObject<T[key]> : RouteFunctionObject<T[key]>)
+    [key in keyof T]: (key extends Parameter ? (parameter: string | number) => RouteFunctionObject<T[key]> : RouteFunctionObject<T[key]>)
 };
 
 /**

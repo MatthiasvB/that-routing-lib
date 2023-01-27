@@ -50,7 +50,7 @@ describe("The client routing API", () => {
     it("Processes route params", () => {
         const api = buildRoutes(routes);
         expect(api.root.articles.$articleId("7")()).toEqual("/root/articles/7");
-        expect(api.root.articles.$articleId("7").edit()).toEqual("/root/articles/7/edit");
+        expect(api.root.articles.$articleId(7).edit()).toEqual("/root/articles/7/edit");
     });
 
     it("Allows overriding segment names for long or reserved strings", () => {
