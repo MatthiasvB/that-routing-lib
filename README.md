@@ -197,10 +197,10 @@ This is another case which is prone to errors. How do we know which parameter na
 But we can do this:
 
 ```typescript
-import {extractParameters} from './that-routing-lib';
+import {getParameterExtractor} from './that-routing-lib';
 
 // In central location:
-const parameters = extractParameters(routesDefinition);
+export const parameters = getParameterExtractor().extract(routesDefinition);
 
 // In component
 const articleId = this.activatedRoute.snapshot.params[parameters.$articleId];
@@ -209,6 +209,7 @@ This isn't perfect. We have no way of knowing whether `$articleId` actually is p
 
 ## Gotchas
 - Due to Typescript technicalities, the maximum depth of your URLs is 30ish segments. That's because a recursive type has to be used, and the stack-size that TS allows is very limited. It's possible that this limit will be increased eventually.
+- On TS versions below 4.5, recursive types are not yet optimized if they are tail recursive. Since this library depends on a recursive type, the provided default of `95` for the maximum recursion (leading to those 30ish segments) depth is too large, leading to `TS2589: Type instantiation is excessively deep and possibly infinite` errors. If you use the `getParameterExtractor().extract(routesDefinition)` function on these versions, you need to limit the recursion depth to `16` to avoid the error: `getParameterExtractor<16>().extract(routesDefinition)`. That also means that the depth of the URLs for which TS will provide support will shrink considerably. 
 
 ## Open issues
 - No support for query params
