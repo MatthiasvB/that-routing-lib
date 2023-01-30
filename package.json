@@ -2,7 +2,6 @@
   "name": "that-routing-lib",
   "version": "1.2.0",
   "description": "A simple api for your routing needs",
-  "type": "module",
   "scripts": {
     "clean": "rm -rf ./lib",
     "build": "npm run clean && npm run build:esm && npm run build:cjs",
@@ -36,6 +35,7 @@
   },
   "types": "./lib/cjs/types/index.d.ts",
   "main": "./lib/cjs/index.js",
+  "module": "./lib/esm/index.mjs",
   "dependencies": {
   },
   "devDependencies": {
