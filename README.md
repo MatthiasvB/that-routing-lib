@@ -74,7 +74,7 @@ Unfortunately, with any segment of the API being a function, there are a few res
 
 Reserved keywords are
 ```typescript
-['name', 'arguments', 'length', 'caller', 'prototype', 'bind']
+['name', 'arguments', 'length', 'caller', 'prototype', 'bind', 'call', 'apply', 'constructor', 'hasOwnProperty', 'isPrototypeOf', 'length', 'toString', 'propertyIsEnumerable', 'toLocaleString', 'valueOf']
 ```
 
 Since it is quite likely that strings like `name` will be part of a URL, you can overwrite the string associated with a given URL segment with the `segmentName` property:
@@ -209,7 +209,7 @@ This isn't perfect. We have no way of knowing whether `$articleId` actually is p
 
 ## Gotchas
 - Due to Typescript technicalities, the maximum depth of your URLs is 30ish segments. That's because a recursive type has to be used, and the stack-size that TS allows is very limited. It's possible that this limit will be increased eventually.
-- On TS versions below 4.5, recursive types are not yet optimized if they are tail recursive. Since this library depends on a recursive type, the provided default of `95` for the maximum recursion (leading to those 30ish segments) depth is too large, leading to `TS2589: Type instantiation is excessively deep and possibly infinite` errors. If you use the `getParameterExtractor().extract(routesDefinition)` function on these versions, you need to limit the recursion depth to `16` to avoid the error: `getParameterExtractor<16>().extract(routesDefinition)`. That also means that the depth of the URLs for which TS will provide support will shrink considerably. 
+- On TS versions below 4.5, recursive types are not yet optimized if they are tail recursive. Since this library depends on a recursive type, the provided default of `95` for the maximum recursion depth (leading to those 30ish segments) is too large, leading to `TS2589: Type instantiation is excessively deep and possibly infinite` errors. If you use the `getParameterExtractor().extract(routesDefinition)` function on these versions, you need to limit the recursion depth to `16` to avoid the error: `getParameterExtractor<16>().extract(routesDefinition)`. That also means that the depth of the URLs for which TS will provide support will shrink considerably. 
 
 ## Open issues
 - No support for query params

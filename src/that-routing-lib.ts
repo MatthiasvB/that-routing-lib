@@ -3,7 +3,8 @@ import {objectMap} from './shared/utils.js';
 const isParent = 'isParent';
 const segmentName = 'segmentName';
 
-const reservedKeys = new Set(['name', 'arguments', 'length', 'caller', 'prototype', 'bind']);
+const reservedKeysList = ['name', 'arguments', 'length', 'caller', 'prototype', 'bind', 'call', 'apply', 'constructor', 'hasOwnProperty', 'isPrototypeOf', 'length', 'toString', 'propertyIsEnumerable', 'toLocaleString', 'valueOf'] as const;
+const reservedKeys: Set<string> = new Set(reservedKeysList);
 
 /**
  * Type for route segment with no sub-route. Empty for now, but could become more complex later on
