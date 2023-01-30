@@ -31,5 +31,5 @@ const nestedObject = {
     }
 };
 
-type extractedObject = ParametersObject<typeof nestedObject>;
+type extractedObject = ParametersObject<typeof nestedObject, 16>;
 

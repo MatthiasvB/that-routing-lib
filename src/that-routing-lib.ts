@@ -71,7 +71,7 @@ type Decr = [never, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17
  * Recursively extracts a Union of all keys out of a nested object structure up to a
  * maximum depth of approx 100, the maximum that the compiler allows
  */
-type ExtractKeys<T, N extends number = 96, Acc = never> = N extends 0 ? never : (T extends object ? (keyof T extends never ? Acc : ExtractKeys<T[keyof T], Decr[N], keyof T | Acc>) : Acc)
+type ExtractKeys<T, N extends number, Acc = never> = N extends 0 ? never : (T extends object ? (keyof T extends never ? Acc : ExtractKeys<T[keyof T], Decr[N], keyof T | Acc>) : Acc)
 
 /**
  * Type of function that can be called to resolve a path
@@ -231,7 +231,7 @@ function createClientApi<T extends ProtoSegment>(
  * Extracts all keys that are parameters out of a nested object structure up to a
  * maximum depth of approx 32, the maximum that the compiler allows
  */
-type ExtractParameters<T> = Extract<ExtractKeys<T>, Parameter>;
+type ExtractParameters<T, D extends number> = Extract<ExtractKeys<T, D>, Parameter>;
 
 // There is something which would I call a bug, here.
 // Typescript knows that T extends ProtoRoutesWrapper, which is a Recursive type - yet of course not infinite in reality.
@@ -243,15 +243,43 @@ type ExtractParameters<T> = Extract<ExtractKeys<T>, Parameter>;
  * Creates a Type that is an object that has all parameter keys found in `T` both as key and value.
  * Keys are extracted up to a maximum depth of approx 32, the maximum that the compiler allows
  */
-export type ParametersObject<T extends ProtoRoutesWrapper> = { [key in ExtractParameters<T>]: ParameterString<key> };
+export type ParametersObject<T extends ProtoRoutesWrapper, D extends number> = { [key in ExtractParameters<T, D>]: ParameterString<key> };
 type ParameterString<T extends string> = T extends `$${infer U}` ? U : T;
 
 /**
- * Generates a parameter object
+ * Generates a parameter extractor. Call it like
+ * ```typescript
+ * const parameters = getParamatersExtractor().extract(routeDefinitons);
+ * ```
+ * The reason extracting parameters is a two-step process is due to how TypeScript handles generics.
+ * The process requires two generic parameters:
+ * - The type of the `routeDefinitions` object. This can be inferred
+ * - A number that limits the recursion depth that TS uses to analyze the `routeDefinitions` object. This can not be inferred, but a default is provided
+ * <p>
+ * If all goes well, you need to specify none of those parameters, because one can be inferred and the other has a default.
+ * But, if you're below TypeScript v4.7 (or maybe v4.6, 4.5, ...?), you'll get an error saying
+ * ```
+ * TS2589: Type instantiation is excessively deep and possibly infinite.
+ * ```
+ * That's because TS in those versions has not yet optimized tail recursive types, and our limit becomes much lower. In fact,
+ * you'll have to pass `16` to make it work. Unfortunately, that also means that TS support for deep URLs will not work.
+ * <p>
+ * Why does that mean we have to call the function in two steps? Simple: As far as I know there is no way for TypeScript to
+ * infer only one of the type arguments and have the other specified by the developer. By splitting the call into two, we
+ * make sure not having to pass redundant type info.
+ * <p>
+ * In short: If you have troubles with errors regarding excessively deep types, just call the function(s) like
+ * ```typescript
+ * const parameters = getParamatersExtractor<16>().extract(routeDefinitons);
+ * ```
+ *
  * @param proto the object from which to extract the parameters
  */
-export function extractParameters<T extends ProtoRoutesWrapper>(proto: T): ParametersObject<T> {
-    return Object.fromEntries(extractHelper(proto).filter(key => key[0] === '$').map(key => [key, key.substring(1)])) as ParametersObject<T>;
+export function getParameterExtractor<D extends number = 95>() {
+    function extract<T extends ProtoRoutesWrapper>(proto: T): ParametersObject<T, D> {
+        return Object.fromEntries(extractHelper(proto).filter(key => key[0] === '$').map(key => [key, key.substring(1)])) as ParametersObject<T, D>;
+    };
+    return { extract };
 }
 
 /**
