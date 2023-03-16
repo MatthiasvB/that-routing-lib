@@ -276,7 +276,7 @@ type ParameterString<T extends string> = T extends `$${infer U}` ? U : T;
  *
  * @param proto the object from which to extract the parameters
  */
-export function getParameterExtractor<D extends number = 95>() {
+export function getParameterExtractor<D extends number = 94>() {
     function extract<T extends ProtoRoutesWrapper>(proto: T): ParametersObject<T, D> {
         return Object.fromEntries(extractHelper(proto).filter(key => key[0] === '$').map(key => [key, key.substring(1)])) as ParametersObject<T, D>;
     };
